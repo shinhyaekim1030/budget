@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가계부</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f4f0; --surface:#fff; --surface2:#edeae3; --border:#e0ddd6;
+  --text:#1c1b18; --text2:#6a6760; --text3:#aaa89f;
+  --green:#2a5c1e; --green-mid:#4a8c34; --green-light:#eaf3e5;
+  --red:#b83228; --red-light:#fdf0ee;
+  --amber:#a05c08; --amber-light:#fdf3e6;
+  --blue:#1e4476; --blue-light:#e8f0fa;
+  --purple:#5a3685; --purple-light:#f0eaf9;
+  --r:14px; --rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);padding:24px 20px 80px;min-height:100vh;}
+.mono{font-family:'DM Mono',monospace;}
+
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+.hdr-title{font-size:20px;font-weight:700;letter-spacing:-.5px;}
+.hdr-title em{font-size:13px;font-weight:400;color:var(--text3);margin-left:6px;font-style:normal;}
+.month-nav{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:14px;font-weight:500;}
+.month-nav button{background:none;border:none;cursor:pointer;color:var(--text2);font-size:17px;padding:0 3px;line-height:1;}
+.month-nav button:hover{color:var(--text);}
+#month-label{min-width:58px;text-align:center;}
+
+/* SUMMARY */
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+.s-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.s-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.s-amt{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;letter-spacing:-.5px;}
+.s-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.s-income .s-amt{color:var(--green);}
+.s-expense .s-amt{color:var(--red);}
+.s-balance .s-amt{color:var(--blue);}
+
+/* SECTION */
+.sec{margin-bottom:22px;}
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.sec-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);}
+.btn-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:4px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;color:var(--text2);cursor:pointer;transition:all .15s;}
+.btn-sec:hover{background:var(--green-light);color:var(--green);border-color:#c5ddb8;}
+.btn-sec.purple:hover{background:var(--purple-light);color:var(--purple);border-color:#c8b3e8;}
+
+/* INCOME LIST */
+.income-list{display:flex;flex-direction:column;gap:8px;}
+.income-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.income-icon{width:34px;height:34px;border-radius:9px;background:var(--green-light);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.income-body{flex:1;min-width:0;}
+.income-memo{font-size:13px;font-weight:500;}
+.income-amt-disp{font-family:'DM Mono',monospace;font-size:15px;color:var(--green);margin-top:2px;}
+.income-actions{display:flex;gap:4px;flex-shrink:0;}
+
+/* CARD GAUGES */
+.card-list{display:flex;flex-direction:column;gap:10px;}
+.card-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
+.card-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.card-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.card-name{font-size:14px;font-weight:500;}
+.goal-chip{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--surface2);color:var(--text2);font-weight:500;flex-shrink:0;}
+.card-right{display:flex;align-items:baseline;gap:3px;}
+.card-used{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;}
+.card-denom{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);}
+.card-actions{display:flex;gap:4px;flex-shrink:0;}
+
+/* GAUGE */
+.gauge-track{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:5px;}
+.gauge-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.23,1,.32,1);}
+.g-ok{background:var(--green-mid);}
+.g-warn{background:var(--amber);}
+.g-over{background:var(--red);}
+.gauge-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:8px;}
+.gauge-pct{font-family:'DM Mono',monospace;font-weight:500;}
+
+/* EXPENSE ROWS */
+.exp-list{border-top:1px solid var(--border);padding-top:9px;display:flex;flex-direction:column;gap:2px;}
+.exp-row{display:flex;align-items:center;gap:6px;padding:3px 0;}
+.exp-memo{flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.exp-amt{font-family:'DM Mono',monospace;font-size:12px;color:var(--red);flex-shrink:0;}
+
+/* QUICK ADD ROW */
+.add-row{display:flex;gap:6px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.add-row input{font-family:'Noto Sans KR',sans-serif;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:6px 9px;color:var(--text);outline:none;transition:border-color .15s;}
+.add-row input:focus{border-color:var(--green-mid);}
+.add-row .inp-memo{flex:1;}
+.add-row .inp-amt{width:90px;}
+.btn-add{background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:6px 12px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;transition:background .15s,transform .1s;flex-shrink:0;}
+.btn-add:hover{background:var(--green-mid);}
+.btn-add:active{transform:scale(.97);}
+
+/* FIXED LIST */
+.fixed-list{display:flex;flex-direction:column;gap:8px;}
+.fixed-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 18px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.fixed-icon{width:30px;height:30px;border-radius:8px;background:var(--amber-light);color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.fixed-body{flex:1;min-width:0;}
+.fixed-name-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+.fixed-name{font-size:13px;font-weight:500;}
+.fixed-card-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;}
+.fixed-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.fixed-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.fixed-amt{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--amber);}
+
+/* SAVINGS */
+.savings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative;overflow:hidden;}
+.savings-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),#9b6de0);}
+.savings-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.savings-name-disp{font-size:14px;font-weight:600;}
+.savings-tag{font-family:'DM Mono',monospace;font-size:12px;background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:20px;font-weight:500;}
+.savings-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.sstat{background:var(--purple-light);border-radius:10px;padding:12px 14px;}
+.sstat .sl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--purple);opacity:.7;margin-bottom:4px;}
+.sstat .sv{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--purple);}
+.sstat .sv.big{font-size:20px;}
+.savings-track{height:10px;background:var(--purple-light);border-radius:99px;overflow:hidden;}
+.savings-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--purple),#9b6de0);transition:width .7s cubic-bezier(.23,1,.32,1);}
+.savings-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* ICON BUTTONS */
+.ibtn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:3px 5px;line-height:1;border-radius:5px;transition:all .15s;}
+.ibtn:hover{color:var(--text);background:var(--surface2);}
+.ibtn.danger:hover{color:var(--red);background:var(--red-light);}
+
+/* EMPTY */
+.empty-note{font-size:12px;color:var(--text3);padding:6px 2px;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--r);padding:24px;width:min(360px,100%);box-shadow:0 8px 40px rgba(0,0,0,.18);animation:pop .18s ease;}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:18px;}
+.mf{margin-bottom:12px;}
+.mf label{font-size:11px;color:var(--text2);margin-bottom:4px;display:block;font-weight:500;}
+.mf input,.mf select{width:100%;font-family:'Noto Sans KR',sans-serif;font-size:13px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;color:var(--text);outline:none;transition:border-color .15s;}
+.mf input:focus,.mf select:focus{border-color:var(--green-mid);}
+.colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
+.cdot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s,border-color .1s;}
+.cdot:hover{transform:scale(1.18);}
+.cdot.sel{border-color:var(--text);}
+.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.btn-mc{background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);padding:7px 15px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.btn-mok{background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:7px 16px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:background .15s;}
+.btn-mok:hover{background:var(--green-mid);}
+.btn-mok.amber{background:var(--amber);}
+.btn-mok.amber:hover{opacity:.85;}
+.btn-mok.purple{background:var(--purple);}
+.btn-mok.purple:hover{opacity:.85;}
+
+@media(max-width:460px){
+  .summary{grid-template-columns:1fr;}
+  .savings-stats{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-title">가계부 <em id="year-lbl"></em></div>
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">‹</button>
+    <span id="month-label"></span>
+    <button onclick="changeMonth(1)">›</button>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="s-card s-income">
+    <div class="s-lbl">💰 수입</div>
+    <div class="s-amt" id="s-income">0원</div>
+    <div class="s-sub">이번 달</div>
+  </div>
+  <div class="s-card s-expense">
+    <div class="s-lbl">💳 총 지출</div>
+    <div class="s-amt" id="s-expense">0원</div>
+    <div class="s-sub">카드 + 고정 + 저축</div>
+  </div>
+  <div class="s-card s-balance">
+    <div class="s-lbl">🏦 잔액</div>
+    <div class="s-amt" id="s-balance">0원</div>
+    <div class="s-sub">수입 − 지출</div>
+  </div>
+</div>
+
+<!-- Income -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">수입</div>
+    <button class="btn-sec" onclick="openModal('income',null)">+ 수입 추가</button>
+  </div>
+  <div class="income-list" id="income-list"></div>
+</div>
+
+<!-- Cards -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">카드 지출</div>
+    <button class="btn-sec" onclick="openModal('card',null)">+ 카드 추가</button>
+  </div>
+  <div class="card-list" id="card-list"></div>
+</div>
+
+<!-- Fixed -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">고정 지출</div>
+    <button class="btn-sec" onclick="openModal('fixed',null)">+ 고정 추가</button>
+  </div>
+  <div class="fixed-list" id="fixed-list"></div>
+</div>
+
+<!-- Savings -->
+<div class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">저축 보험</div>
+    <button class="btn-sec purple" onclick="openModal('savings',null)">✏ 설정</button>
+  </div>
+  <div class="savings-card">
+    <div class="savings-hdr">
+      <div class="savings-name-disp" id="sav-name-disp">저축 보험</div>
+      <div class="savings-tag mono" id="sav-tag">월 0원</div>
+    </div>
+    <div class="savings-stats">
+      <div class="sstat">
+        <div class="sl">현재 납입액</div>
+        <div class="sv" id="sav-current">0원</div>
+      </div>
+      <div class="sstat">
+        <div class="sl">만기까지</div>
+        <div class="sv big" id="sav-dday">D-?</div>
+      </div>
+    </div>
+    <div class="savings-track"><div class="savings-fill" id="sav-fill" style="width:0%"></div></div>
+    <div class="savings-foot">
+      <span id="sav-elapsed">납입 0개월</span>
+      <span id="sav-end">만기일 미설정</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS ── -->
+<div class="overlay" id="modal-income">
+  <div class="modal">
+    <div class="modal-title" id="income-modal-title">수입 추가</div>
+    <div class="mf"><label>내역 (예: 4월 월급, 상여금)</label><input type="text" id="m-income-memo" placeholder="내역 입력"></div>
+    <div class="mf"><label>금액 (원)</label><input type="number" id="m-income-amt" placeholder="예: 3500000"></div>
+    <div class="mactions">
+      <button class="btn-mc" onclick="closeModal('income')">취소</button>
+      <button class="btn-mok" id="btn-income-ok" onclick="submitIncome()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-card">
+  <div class="modal">
+    <div class="modal-title" id="card-modal-title">카드 추가</div>
+    <div class="mf"><label>카드 이름</label><input type="text" id="m-card-name" placeholder="예: 신한카드"></div>
+    <div class="mf"><label>목표 한도 (원) — 비워두면 한도 없음</label><input type="number" id="m-card-goal" placeholder="예: 300000"></div>
+    <div class="mf"><label>카드 색상</label><div class="colors" id="color-picker"></div></div>
+    <div class="mactions">
+      <button class="btn-mc" onclick="closeModal('card')">취소</button>
+      <button class="btn-mok" onclick="submitCard()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-expense">
+  <div class="modal">
+    <div class="modal-title" id="exp-modal-title">지출 추가</div>
+    <input type="hidden" id="m-exp-card-id">
+    <input type="hidden" id="m-exp-id">
+    <div class="mf"><label>지출 내역</label><input type="text" id="m-exp-memo" placeholder="예: 스타벅스"></div>
+    <div class="mf"><label>금액 (원)</label><input type="number" id="m-exp-amt" placeholder="예: 6500"></div>
+    <div class="mactions">
+      <button class="btn-mc" onclick="closeModal('expense')">취소</button>
+      <button class="btn-mok" onclick="submitExpense()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-fixed">
+  <div class="modal">
+    <div class="modal-title" id="fixed-modal-title">고정 지출 추가</div>
+    <input type="hidden" id="m-fixed-id">
+    <div class="mf"><label>항목명</label><input type="text" id="m-fixed-name" placeholder="예: 통신비"></div>
+    <div class="mf"><label>금액 (원)</label><input type="number" id="m-fixed-amt" placeholder="예: 59000"></div>
+    <div class="mf">
+      <label>어느 카드에서 나가나요?</label>
+      <select id="m-fixed-card"><option value="">카드 없음 (현금/계좌이체)</option></select>
+    </div>
+    <div class="mf"><label>메모 (선택)</label><input type="text" id="m-fixed-note" placeholder="예: 매달 25일 자동이체"></div>
+    <div class="mactions">
+      <button class="btn-mc" onclick="closeModal('fixed')">취소</button>
+      <button class="btn-mok amber" onclick="submitFixed()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-savings">
+  <div class="modal">
+    <div class="modal-title">저축 보험 설정</div>
+    <div class="mf"><label>보험명</label><input type="text" id="m-sav-name" placeholder="예: 삼성생명 저축보험"></div>
+    <div class="mf"><label>월 납입액 (원)</label><input type="number" id="m-sav-monthly" placeholder="예: 200000"></div>
+    <div class="mf"><label>현재 납입 총액 (원)</label><input type="number" id="m-sav-current" placeholder="예: 2400000"></div>
+    <div class="mf"><label>납입 시작일</label><input type="date" id="m-sav-start"></div>
+    <div class="mf"><label>만기일</label><input type="date" id="m-sav-end"></div>
+    <div class="mactions">
+      <button class="btn-mc" onclick="closeModal('savings')">취소</button>
+      <button class="btn-mok purple" onclick="submitSavings()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE = 'hb_v5';
+const COLORS = ['#4a8c34','#e05c2a','#1a6fa8','#b83298','#a05c08','#5a3685','#b83228','#1a7a70','#c07000'];
+
+let state = JSON.parse(localStorage.getItem(STORE)||'null') || {
+  months:{},
+  savings:{name:'저축 보험',monthly:0,current:0,startDate:'',endDate:''}
+};
+let curYear=new Date().getFullYear(), curMonth=new Date().getMonth()+1;
+let selColor=COLORS[0];
+
+function mkey(){return `${curYear}-${String(curMonth).padStart(2,'0')}`;}
+function getM(){
+  if(!state.months[mkey()]) state.months[mkey()]={income:[],cards:[],fixed:[]};
+  return state.months[mkey()];
+}
+function save(){localStorage.setItem(STORE,JSON.stringify(state));}
+function uid(){return Date.now()+Math.floor(Math.random()*9999);}
+
+// ── Format ──────────────────────────────────────────────
+function fmt(n){
+  n=Math.round(n||0);
+  if(n>=100000000) return (n/100000000).toFixed(1).replace(/\.0$/,'')+'억원';
+  if(n>=10000){const m=Math.floor(n/10000),r=n%10000;return r===0?m+'만원':m+'만 '+r.toLocaleString()+'원';}
+  return n.toLocaleString()+'원';
+}
+function fmtSigned(n){return (n<0?'-':'')+fmt(Math.abs(n));}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Month nav ────────────────────────────────────────────
+function changeMonth(d){
+  curMonth+=d;
+  if(curMonth>12){curMonth=1;curYear++;}
+  if(curMonth<1){curMonth=12;curYear--;}
+  render();
+}
+
+// ── Modal helpers ────────────────────────────────────────
+function openModal(type, id){
+  const m=getM();
+  if(type==='income'){
+    const item=id?m.income.find(x=>x.id===id):null;
+    set('income-modal-title', item?'수입 수정':'수입 추가');
+    val('m-income-memo', item?item.memo:'');
+    val('m-income-amt',  item?item.amt:'');
+    // store editing id in a data attr
+    document.getElementById('modal-income').dataset.editId = id||'';
+    show('modal-income');
+    focus('m-income-memo');
+
+  } else if(type==='card'){
+    const card=id?m.cards.find(x=>x.id===id):null;
+    set('card-modal-title', card?'카드 수정':'카드 추가');
+    val('m-card-name', card?card.name:'');
+    val('m-card-goal', card?(card.goal||''):'');
+    selColor=card?card.color:COLORS[0];
+    buildColorPicker();
+    document.getElementById('modal-card').dataset.editId=id||'';
+    show('modal-card');
+    focus('m-card-name');
+
+  } else if(type==='expense'){
+    // id = cardId (new) or {cardId,expId} (edit)
+    let cardId, expId=null, isEdit=false;
+    if(id && typeof id==='object'){cardId=id.cardId;expId=id.expId;isEdit=true;}
+    else{cardId=id;}
+    const card=m.cards.find(x=>x.id===cardId);
+    const exp=isEdit&&card?card.expenses.find(e=>e.id===expId):null;
+    set('exp-modal-title', isEdit?`지출 수정`:(card?`${card.name} — 지출 추가`:'지출 추가'));
+    val('m-exp-card-id', cardId);
+    val('m-exp-id',      expId||'');
+    val('m-exp-memo',    exp?exp.memo:'');
+    val('m-exp-amt',     exp?exp.amt:'');
+    show('modal-expense');
+    focus('m-exp-memo');
+
+  } else if(type==='fixed'){
+    const item=id?m.fixed.find(x=>x.id===id):null;
+    set('fixed-modal-title', item?'고정 지출 수정':'고정 지출 추가');
+    val('m-fixed-id',   id||'');
+    val('m-fixed-name', item?item.name:'');
+    val('m-fixed-amt',  item?item.amt:'');
+    val('m-fixed-note', item?(item.note||''):'');
+    buildCardSelect(item?item.cardId:'');
+    show('modal-fixed');
+    focus('m-fixed-name');
+
+  } else if(type==='savings'){
+    const s=state.savings;
+    val('m-sav-name',    s.name||'');
+    val('m-sav-monthly', s.monthly||'');
+    val('m-sav-current', s.current||'');
+    val('m-sav-start',   s.startDate||'');
+    val('m-sav-end',     s.endDate||'');
+    show('modal-savings');
+    focus('m-sav-name');
+  }
+}
+function closeModal(type){document.getElementById('modal-'+type).classList.remove('open');}
+function show(id){document.getElementById(id).classList.add('open');}
+function val(id,v){if(v!==undefined)document.getElementById(id).value=v;else return document.getElementById(id).value;}
+function set(id,t){document.getElementById(id).textContent=t;}
+function focus(id){setTimeout(()=>document.getElementById(id).focus(),80);}
+
+// close on backdrop click
+document.querySelectorAll('.overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+});
+// enter key
+['income','card','expense','fixed','savings'].forEach(t=>{
+  document.getElementById('modal-'+t).addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&e.target.tagName!=='SELECT') window['submit'+t.charAt(0).toUpperCase()+t.slice(1)]();
+  });
+});
+
+// ── Color picker ─────────────────────────────────────────
+function buildColorPicker(){
+  const el=document.getElementById('color-picker');
+  el.innerHTML='';
+  COLORS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='cdot'+(c===selColor?' sel':'');
+    d.style.background=c;
+    d.onclick=()=>{selColor=c;el.querySelectorAll('.cdot').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};
+    el.appendChild(d);
+  });
+}
+
+// ── Card select for fixed ────────────────────────────────
+function buildCardSelect(selectedId){
+  const sel=document.getElementById('m-fixed-card');
+  sel.innerHTML='<option value="">카드 없음 (현금/계좌이체)</option>';
+  getM().cards.forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id;o.textContent=c.name;
+    if(String(c.id)===String(selectedId))o.selected=true;
+    sel.appendChild(o);
+  });
+}
+
+// ── Submit handlers ──────────────────────────────────────
+function submitIncome(){
+  const memo=val('m-income-memo').trim();
+  const amt=parseInt(val('m-income-amt'))||0;
+  if(!memo||!amt)return;
+  const m=getM();
+  const editId=parseFloat(document.getElementById('modal-income').dataset.editId)||null;
+  if(editId){
+    const item=m.income.find(x=>x.id===editId);
+    if(item){item.memo=memo;item.amt=amt;}
+  } else {
+    m.income.push({id:uid(),memo,amt});
+  }
+  save();closeModal('income');render();
+}
+
+function submitCard(){
+  const name=val('m-card-name').trim();
+  if(!name)return;
+  const goal=parseInt(val('m-card-goal'))||0;
+  const m=getM();
+  const editId=parseFloat(document.getElementById('modal-card').dataset.editId)||null;
+  if(editId){
+    const card=m.cards.find(x=>x.id===editId);
+    if(card){card.name=name;card.goal=goal;card.color=selColor;}
+  } else {
+    m.cards.push({id:uid(),name,goal,color:selColor,expenses:[]});
+  }
+  save();closeModal('card');render();
+}
+
+function submitExpense(){
+  const memo=val('m-exp-memo').trim();
+  const amt=parseInt(val('m-exp-amt'))||0;
+  if(!memo||!amt)return;
+  const cardId=parseFloat(val('m-exp-card-id'));
+  const expId=parseFloat(val('m-exp-id'))||null;
+  const m=getM();
+  const card=m.cards.find(x=>x.id===cardId);
+  if(!card)return;
+  if(expId){
+    const exp=card.expenses.find(e=>e.id===expId);
+    if(exp){exp.memo=memo;exp.amt=amt;}
+  } else {
+    card.expenses.push({id:uid(),memo,amt});
+  }
+  save();closeModal('expense');render();
+}
+
+function submitFixed(){
+  const name=val('m-fixed-name').trim();
+  const amt=parseInt(val('m-fixed-amt'))||0;
+  if(!name||!amt)return;
+  const cardIdRaw=val('m-fixed-card');
+  const cardId=cardIdRaw?parseFloat(cardIdRaw):null;
+  const note=val('m-fixed-note').trim();
+  const m=getM();
+  const editId=parseFloat(val('m-fixed-id'))||null;
+  if(editId){
+    const item=m.fixed.find(x=>x.id===editId);
+    if(item){item.name=name;item.amt=amt;item.cardId=cardId;item.note=note;}
+  } else {
+    m.fixed.push({id:uid(),name,amt,cardId,note});
+  }
+  save();closeModal('fixed');render();
+}
+
+function submitSavings(){
+  state.savings={
+    name:val('m-sav-name').trim()||'저축 보험',
+    monthly:parseInt(val('m-sav-monthly'))||0,
+    current:parseInt(val('m-sav-current'))||0,
+    startDate:val('m-sav-start'),
+    endDate:val('m-sav-end'),
+  };
+  save();closeModal('savings');render();
+}
+
+// ── Delete ───────────────────────────────────────────────
+function delIncome(id){const m=getM();m.income=m.income.filter(x=>x.id!==id);save();render();}
+function delCard(id){
+  const m=getM();
+  m.fixed.forEach(f=>{if(f.cardId===id)f.cardId=null;});
+  m.cards=m.cards.filter(x=>x.id!==id);
+  save();render();
+}
+function delExp(cardId,expId){
+  const card=getM().cards.find(x=>x.id===cardId);
+  if(card)card.expenses=card.expenses.filter(e=>e.id!==expId);
+  save();render();
+}
+function delFixed(id){const m=getM();m.fixed=m.fixed.filter(x=>x.id!==id);save();render();}
+
+// ── Quick add (inline row, no modal) ─────────────────────
+function quickAdd(cardId){
+  const memo=document.getElementById('em-'+cardId).value.trim();
+  const amt=parseInt(document.getElementById('ea-'+cardId).value)||0;
+  if(!memo||!amt)return;
+  const card=getM().cards.find(x=>x.id===cardId);
+  if(!card)return;
+  card.expenses.push({id:uid(),memo,amt});
+  document.getElementById('em-'+cardId).value='';
+  document.getElementById('ea-'+cardId).value='';
+  save();render();
+}
+
+// ── D-Day helpers ────────────────────────────────────────
+function dday(ds){
+  if(!ds)return null;
+  const d=new Date(ds),n=new Date();
+  n.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  return Math.ceil((d-n)/86400000);
+}
+function monthsBetween(a,b){
+  if(!a||!b)return 0;
+  const da=new Date(a),db=new Date(b);
+  return Math.max(0,(db.getFullYear()-da.getFullYear())*12+db.getMonth()-da.getMonth());
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function render(){
+  set('month-label',`${curMonth}월`);
+  set('year-lbl',`${curYear}년`);
+  const m=getM();
+
+  const incTotal   = m.income.reduce((s,x)=>s+x.amt,0);
+  const cardTotal  = m.cards.reduce((s,c)=>s+c.expenses.reduce((a,e)=>a+e.amt,0),0);
+  const fixedTotal = m.fixed.reduce((s,f)=>s+f.amt,0);
+  const savAmt     = state.savings.monthly||0;
+  const expTotal   = cardTotal+fixedTotal+savAmt;
+  const balance    = incTotal-expTotal;
+
+  set('s-income',  fmt(incTotal));
+  set('s-expense', fmt(expTotal));
+  set('s-balance', fmtSigned(balance));
+  document.getElementById('s-balance').style.color = balance>=0?'var(--blue)':'var(--red)';
+
+  // ─ Income ─
+  const incEl=document.getElementById('income-list');
+  incEl.innerHTML='';
+  if(!m.income.length) incEl.innerHTML='<div class="empty-note">수입 내역이 없습니다.</div>';
+  m.income.forEach(item=>{
+    const d=document.createElement('div');
+    d.className='income-item';
+    d.innerHTML=`
+      <div class="income-icon">💴</div>
+      <div class="income-body">
+        <div class="income-memo">${esc(item.memo)}</div>
+        <div class="income-amt-disp">+${fmt(item.amt)}</div>
+      </div>
+      <div class="income-actions">
+        <button class="ibtn" onclick="openModal('income',${item.id})" title="수정">✏</button>
+        <button class="ibtn danger" onclick="delIncome(${item.id})" title="삭제">✕</button>
+      </div>`;
+    incEl.appendChild(d);
+  });
+
+  // ─ Cards ─
+  const cardEl=document.getElementById('card-list');
+  cardEl.innerHTML='';
+  if(!m.cards.length) cardEl.innerHTML='<div class="empty-note">카드가 없습니다. 위 버튼으로 추가하세요.</div>';
+  m.cards.forEach(card=>{
+    const fixedOnCard=m.fixed.filter(f=>String(f.cardId)===String(card.id));
+    const fixedOnAmt=fixedOnCard.reduce((s,f)=>s+f.amt,0);
+    const used=card.expenses.reduce((s,e)=>s+e.amt,0)+fixedOnAmt;
+    const hasGoal=card.goal>0;
+    const pct=hasGoal?Math.min((used/card.goal)*100,100):0;
+    const gc=pct<70?'g-ok':pct<100?'g-warn':'g-over';
+    const msg=pct>=100?'⚠ 한도 초과!':pct>=70?'⚡ 거의 다 찼어요':'여유 있어요';
+
+    const expRows=card.expenses.map(e=>`
+      <div class="exp-row">
+        <span class="exp-memo">${esc(e.memo)}</span>
+        <span class="exp-amt">-${fmt(e.amt)}</span>
+        <button class="ibtn" onclick='openModal("expense",{cardId:${card.id},expId:${e.id}})' title="수정">✏</button>
+        <button class="ibtn danger" onclick="delExp(${card.id},${e.id})" title="삭제">✕</button>
+      </div>`).join('');
+
+    const fixedRows=fixedOnCard.map(f=>`
+      <div class="exp-row">
+        <span class="exp-memo" style="color:var(--amber)">📌 ${esc(f.name)}</span>
+        <span class="exp-amt" style="color:var(--amber)">-${fmt(f.amt)}</span>
+      </div>`).join('');
+
+    const bl=document.createElement('div');
+    bl.className='card-block';
+    bl.innerHTML=`
+      <div class="card-top">
+        <div class="card-left">
+          <div class="card-dot" style="background:${card.color}"></div>
+          <div class="card-name">${esc(card.name)}</div>
+          ${hasGoal?`<div class="goal-chip">${fmt(card.goal)}</div>`:''}
+        </div>
+        <div class="card-right">
+          <span class="card-used" style="color:${card.color}">${fmt(used)}</span>
+          ${hasGoal?`<span class="card-denom"> / ${fmt(card.goal)}</span>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="ibtn" onclick="openModal('card',${card.id})" title="카드 수정">✏</button>
+          <button class="ibtn danger" onclick="delCard(${card.id})" title="카드 삭제">✕</button>
+        </div>
+      </div>
+      ${hasGoal?`
+      <div class="gauge-track"><div class="gauge-fill ${gc}" style="width:${pct}%"></div></div>
+      <div class="gauge-meta"><span>${msg}</span><span class="gauge-pct">${Math.round(pct)}%</span></div>`:''}
+      ${(card.expenses.length||fixedOnCard.length)?`<div class="exp-list">${expRows}${fixedRows}</div>`:''}
+      <div class="add-row">
+        <input class="inp-memo" type="text" id="em-${card.id}" placeholder="지출 내역">
+        <input class="inp-amt" type="number" id="ea-${card.id}" placeholder="금액">
+        <button class="btn-add" onclick="quickAdd(${card.id})">+ 추가</button>
+      </div>`;
+    cardEl.appendChild(bl);
+
+    bl.querySelector('#em-'+card.id).addEventListener('keydown',e=>{if(e.key==='Enter')bl.querySelector('#ea-'+card.id).focus();});
+    bl.querySelector('#ea-'+card.id).addEventListener('keydown',e=>{if(e.key==='Enter')quickAdd(card.id);});
+  });
+
+  // ─ Fixed ─
+  const fixEl=document.getElementById('fixed-list');
+  fixEl.innerHTML='';
+  if(!m.fixed.length) fixEl.innerHTML='<div class="empty-note">고정 지출이 없습니다.</div>';
+  m.fixed.forEach(item=>{
+    const linkedCard=item.cardId?m.cards.find(c=>String(c.id)===String(item.cardId)):null;
+    const chip=linkedCard
+      ?`<span class="fixed-card-chip" style="background:${linkedCard.color}20;color:${linkedCard.color};border:1px solid ${linkedCard.color}40">
+          <span style="width:6px;height:6px;border-radius:50%;background:${linkedCard.color};display:inline-block;flex-shrink:0"></span>
+          ${esc(linkedCard.name)}</span>`
+      :`<span style="font-size:10px;color:var(--text3);">현금/계좌</span>`;
+    const el=document.createElement('div');
+    el.className='fixed-item';
+    el.innerHTML=`
+      <div class="fixed-icon">📌</div>
+      <div class="fixed-body">
+        <div class="fixed-name-row"><span class="fixed-name">${esc(item.name)}</span>${chip}</div>
+        ${item.note?`<div class="fixed-sub">${esc(item.note)}</div>`:''}
+      </div>
+      <div class="fixed-right">
+        <div class="fixed-amt">-${fmt(item.amt)}</div>
+        <button class="ibtn" onclick="openModal('fixed',${item.id})" title="수정">✏</button>
+        <button class="ibtn danger" onclick="delFixed(${item.id})" title="삭제">✕</button>
+      </div>`;
+    fixEl.appendChild(el);
+  });
+
+  // ─ Savings ─
+  const s=state.savings;
+  set('sav-name-disp', s.name||'저축 보험');
+  set('sav-tag',       `월 ${fmt(s.monthly)}`);
+  set('sav-current',   fmt(s.current));
+
+  const dd=dday(s.endDate);
+  const ddEl=document.getElementById('sav-dday');
+  if(dd===null){ddEl.textContent='D-?';ddEl.style.color='var(--purple)';}
+  else if(dd>0){ddEl.textContent=`D-${dd}`;ddEl.style.color=dd<=60?'var(--red)':'var(--purple)';}
+  else if(dd===0){ddEl.textContent='D-Day!';ddEl.style.color='var(--red)';}
+  else{ddEl.textContent='만기 완료';ddEl.style.color='var(--green)';}
+
+  const elapsed=monthsBetween(s.startDate, new Date().toISOString().slice(0,10));
+  const total=monthsBetween(s.startDate, s.endDate);
+  const pct=total>0?Math.min((elapsed/total)*100,100):0;
+  document.getElementById('sav-fill').style.width=pct+'%';
+  set('sav-elapsed', `납입 ${elapsed}개월`);
+  set('sav-end', s.endDate?`만기일: ${s.endDate}`:'만기일 미설정');
+}
+
+render();
+</script>
+</body>
+</html>
