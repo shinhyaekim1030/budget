@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가계부</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #eeece7;
+  --border: #e2dfd7;
+  --text: #1c1b18;
+  --text2: #6a6760;
+  --text3: #aaa89f;
+  --green: #2a5c1e;
+  --green-mid: #4a8c34;
+  --green-light: #eaf3e5;
+  --red: #b83228;
+  --red-light: #fdf0ee;
+  --amber: #a05c08;
+  --amber-light: #fdf3e6;
+  --blue: #1e4476;
+  --blue-light: #e8f0fa;
+  --purple: #5a3685;
+  --purple-light: #f0eaf9;
+  --r: 14px;
+  --rs: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px 20px 60px;
+  min-height: 100vh;
+}
+.mono { font-family: 'DM Mono', monospace; }
+
+/* HEADER */
+.hdr { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; flex-wrap:wrap; gap:10px; }
+.hdr-title { font-size:20px; font-weight:700; letter-spacing:-0.5px; }
+.hdr-title span { font-size:13px; font-weight:400; color:var(--text3); margin-left:6px; }
+.month-nav {
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:6px 14px; font-size:14px; font-weight:500;
+}
+.month-nav button { background:none; border:none; cursor:pointer; color:var(--text2); font-size:17px; padding:0 2px; }
+.month-nav button:hover { color:var(--text); }
+#month-label { min-width:60px; text-align:center; }
+
+/* SUMMARY */
+.summary { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
+.s-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px 18px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.s-card .lbl { font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--text3); margin-bottom:6px; }
+.s-card .amt { font-family:'DM Mono',monospace; font-size:19px; font-weight:500; letter-spacing:-.5px; }
+.s-card .sub { font-size:11px; color:var(--text3); margin-top:3px; }
+.s-income .amt { color:var(--green); }
+.s-expense .amt { color:var(--red); }
+.s-balance .amt { color:var(--blue); }
+
+/* SECTION */
+.sec { margin-bottom:22px; }
+.sec-title {
+  font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--text3); margin-bottom:10px; padding-left:2px;
+}
+
+/* INCOME CARD */
+.income-row {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px 20px;
+  display:flex; align-items:center; gap:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.income-icon {
+  width:38px; height:38px; border-radius:10px;
+  background:var(--green-light); color:var(--green);
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; flex-shrink:0;
+}
+.income-body { flex:1; }
+.income-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; }
+.income-amt { font-family:'DM Mono',monospace; font-size:21px; font-weight:500; color:var(--green); margin-top:1px; }
+.income-edit { display:flex; gap:7px; align-items:center; }
+.income-edit input {
+  font-family:'DM Mono',monospace; font-size:13px;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--rs); padding:6px 10px; color:var(--text);
+  outline:none; width:130px; transition:border-color .15s;
+}
+.income-edit input:focus { border-color:var(--green-mid); }
+.btn-sm {
+  background:var(--green-light); color:var(--green);
+  border:1px solid #c5ddb8; border-radius:var(--rs);
+  padding:6px 12px; font-size:12px;
+  font-family:'Noto Sans KR',sans-serif; font-weight:500;
+  cursor:pointer; white-space:nowrap; transition:background .15s;
+}
+.btn-sm:hover { background:var(--green); color:#fff; border-color:var(--green); }
+
+/* CARD GAUGES */
+.card-list { display:flex; flex-direction:column; gap:10px; }
+.card-block {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px 18px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.card-name-wrap { display:flex; align-items:center; gap:8px; }
+.card-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.card-name-txt { font-size:14px; font-weight:500; }
+.card-goal-tag {
+  font-size:10px; padding:2px 7px; border-radius:20px;
+  background:var(--surface2); color:var(--text2); font-weight:500;
+}
+.card-right { display:flex; align-items:baseline; gap:3px; }
+.card-used { font-family:'DM Mono',monospace; font-size:15px; font-weight:500; }
+.card-denom { font-family:'DM Mono',monospace; font-size:12px; color:var(--text3); }
+
+.gauge-track { height:8px; background:var(--surface2); border-radius:99px; overflow:hidden; margin-bottom:5px; }
+.gauge-fill {
+  height:100%; border-radius:99px;
+  transition:width .65s cubic-bezier(.23,1,.32,1);
+}
+.g-ok { background:var(--green-mid); }
+.g-warn { background:var(--amber); }
+.g-over { background:var(--red); }
+
+.gauge-meta { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); }
+.gauge-pct { font-family:'DM Mono',monospace; font-weight:500; }
+
+/* expense log inside card */
+.exp-log { margin-top:9px; border-top:1px solid var(--border); padding-top:8px; display:flex; flex-direction:column; gap:3px; }
+.exp-row { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--text2); }
+.exp-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.exp-amt { font-family:'DM Mono',monospace; font-size:12px; color:var(--red); margin:0 8px; flex-shrink:0; }
+.btn-del { background:none; border:none; color:var(--text3); cursor:pointer; font-size:13px; padding:1px 3px; transition:color .15s; flex-shrink:0; }
+.btn-del:hover { color:var(--red); }
+
+/* add expense row */
+.add-exp-row { display:flex; gap:7px; margin-top:9px; border-top:1px solid var(--border); padding-top:9px; }
+.add-exp-row input {
+  font-family:'Noto Sans KR',sans-serif; font-size:12px;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--rs); padding:6px 9px; color:var(--text); outline:none;
+  transition:border-color .15s;
+}
+.add-exp-row input:focus { border-color:var(--green-mid); }
+.add-exp-row input.inp-desc { flex:1; }
+.add-exp-row input.inp-amt { width:100px; }
+.btn-add-exp {
+  background:var(--green); color:#fff;
+  border:none; border-radius:var(--rs);
+  padding:6px 12px; font-size:12px;
+  font-family:'Noto Sans KR',sans-serif; cursor:pointer;
+  transition:background .15s, transform .1s;
+  white-space:nowrap;
+}
+.btn-add-exp:hover { background:var(--green-mid); }
+.btn-add-exp:active { transform:scale(.97); }
+
+/* new card button */
+.btn-new-card {
+  background:none; border:2px dashed var(--border);
+  border-radius:var(--r); padding:13px; width:100%;
+  font-family:'Noto Sans KR',sans-serif; font-size:13px;
+  color:var(--text3); cursor:pointer; margin-top:8px;
+  transition:border-color .15s, color .15s;
+}
+.btn-new-card:hover { border-color:var(--green-mid); color:var(--green-mid); }
+
+/* FIXED EXPENSES */
+.fixed-list { display:flex; flex-direction:column; gap:8px; }
+.fixed-item {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:13px 18px;
+  display:flex; justify-content:space-between; align-items:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.fixed-left { display:flex; align-items:center; gap:10px; }
+.fixed-icon {
+  width:30px; height:30px; border-radius:8px;
+  background:var(--amber-light); color:var(--amber);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px;
+}
+.fixed-name { font-size:13px; font-weight:500; }
+.fixed-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+.fixed-right { display:flex; align-items:center; gap:10px; }
+.fixed-amt { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:var(--amber); }
+
+.fixed-add {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:13px 16px; margin-top:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.fixed-add-row { display:flex; gap:7px; flex-wrap:wrap; }
+.fixed-add-row input {
+  font-family:'Noto Sans KR',sans-serif; font-size:12px;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--rs); padding:6px 10px; color:var(--text); outline:none;
+  transition:border-color .15s;
+}
+.fixed-add-row input:focus { border-color:var(--amber); }
+.fixed-add-row input.fa-name { flex:1; min-width:100px; }
+.fixed-add-row input.fa-amt { width:120px; }
+.fixed-add-row input.fa-note { flex:1; min-width:100px; }
+.btn-add-fixed {
+  background:var(--amber-light); color:var(--amber);
+  border:1px solid #f0c88a; border-radius:var(--rs);
+  padding:6px 13px; font-size:12px;
+  font-family:'Noto Sans KR',sans-serif; font-weight:500;
+  cursor:pointer; white-space:nowrap; transition:background .15s;
+}
+.btn-add-fixed:hover { background:var(--amber); color:#fff; border-color:var(--amber); }
+
+/* SAVINGS */
+.savings-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:20px 22px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+  position:relative; overflow:hidden;
+}
+.savings-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--purple), #9b6de0);
+}
+.savings-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.savings-name { font-size:14px; font-weight:600; }
+.savings-monthly-tag {
+  font-family:'DM Mono',monospace; font-size:12px;
+  background:var(--purple-light); color:var(--purple);
+  padding:3px 10px; border-radius:20px; font-weight:500;
+}
+.savings-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+.sstat {
+  background:var(--purple-light); border-radius:10px; padding:12px 14px;
+}
+.sstat .sl { font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--purple); opacity:.7; margin-bottom:4px; }
+.sstat .sv { font-family:'DM Mono',monospace; font-size:16px; font-weight:500; color:var(--purple); }
+.sstat .sv.big { font-size:20px; }
+.savings-track { height:10px; background:var(--purple-light); border-radius:99px; overflow:hidden; }
+.savings-fill {
+  height:100%; border-radius:99px;
+  background:linear-gradient(90deg, var(--purple), #9b6de0);
+  transition:width .7s cubic-bezier(.23,1,.32,1);
+}
+.savings-foot { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); margin-top:6px; }
+
+.savings-edit {
+  display:flex; gap:7px; flex-wrap:wrap;
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--border);
+}
+.savings-edit input {
+  font-family:'Noto Sans KR',sans-serif; font-size:12px;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--rs); padding:6px 10px; color:var(--text);
+  outline:none; flex:1; min-width:110px; transition:border-color .15s;
+}
+.savings-edit input:focus { border-color:var(--purple); }
+.btn-save-s {
+  background:var(--purple); color:#fff; border:none;
+  border-radius:var(--rs); padding:6px 14px;
+  font-size:12px; font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer; white-space:nowrap; transition:opacity .15s;
+}
+.btn-save-s:hover { opacity:.82; }
+
+/* MODAL */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:200; align-items:center; justify-content:center; }
+.overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border-radius:var(--r);
+  padding:24px; width:min(340px,90vw);
+  box-shadow:0 8px 40px rgba(0,0,0,.15);
+  animation:pop .2s ease;
+}
+@keyframes pop { from{transform:scale(.94);opacity:0} to{transform:scale(1);opacity:1} }
+.modal h3 { font-size:15px; font-weight:600; margin-bottom:16px; }
+.mfield { margin-bottom:11px; }
+.mfield label { font-size:11px; color:var(--text2); margin-bottom:4px; display:block; }
+.mfield input {
+  width:100%; font-family:'Noto Sans KR',sans-serif; font-size:13px;
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--rs); padding:8px 11px; color:var(--text); outline:none;
+  transition:border-color .15s;
+}
+.mfield input:focus { border-color:var(--green-mid); }
+.colors { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+.cdot {
+  width:22px; height:22px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:transform .1s, border-color .1s;
+}
+.cdot:hover { transform:scale(1.18); }
+.cdot.sel { border-color:var(--text); }
+.mactions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.btn-cancel { background:var(--surface2); color:var(--text2); border:1px solid var(--border); border-radius:var(--rs); padding:7px 15px; font-size:13px; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.btn-confirm { background:var(--green); color:#fff; border:none; border-radius:var(--rs); padding:7px 15px; font-size:13px; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.btn-confirm:hover { background:var(--green-mid); }
+
+@media(max-width:480px){
+  .summary { grid-template-columns:1fr; }
+  .savings-stats { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-title">가계부 <span id="year-lbl"></span></div>
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">‹</button>
+    <span id="month-label"></span>
+    <button onclick="changeMonth(1)">›</button>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="s-card s-income">
+    <div class="lbl">💰 수입</div>
+    <div class="amt" id="s-income">0원</div>
+    <div class="sub">이번 달 월급</div>
+  </div>
+  <div class="s-card s-expense">
+    <div class="lbl">💳 총 지출</div>
+    <div class="amt" id="s-expense">0원</div>
+    <div class="sub" id="s-expense-sub">카드 + 고정지출</div>
+  </div>
+  <div class="s-card s-balance">
+    <div class="lbl">🏦 잔액</div>
+    <div class="amt" id="s-balance">0원</div>
+    <div class="sub">수입 - 지출</div>
+  </div>
+</div>
+
+<!-- Income -->
+<div class="sec">
+  <div class="sec-title">수입</div>
+  <div class="income-row">
+    <div class="income-icon">💴</div>
+    <div class="income-body">
+      <div class="income-label">월급</div>
+      <div class="income-amt" id="income-display">0원</div>
+    </div>
+    <div class="income-edit">
+      <input type="number" id="income-input" placeholder="월급 입력" min="0">
+      <button class="btn-sm" onclick="saveIncome()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Card gauges -->
+<div class="sec">
+  <div class="sec-title">카드 지출</div>
+  <div class="card-list" id="card-list"></div>
+  <button class="btn-new-card" onclick="openCardModal()">+ 카드 추가</button>
+</div>
+
+<!-- Fixed expenses -->
+<div class="sec">
+  <div class="sec-title">고정 지출</div>
+  <div class="fixed-list" id="fixed-list"></div>
+  <div class="fixed-add">
+    <div class="fixed-add-row">
+      <input class="fa-name" type="text" id="fixed-name" placeholder="항목명 (예: 관리비)">
+      <input class="fa-amt" type="number" id="fixed-amt" placeholder="금액">
+      <input class="fa-note" type="text" id="fixed-note" placeholder="메모 (선택)">
+      <button class="btn-add-fixed" onclick="addFixed()">+ 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- Savings insurance -->
+<div class="sec">
+  <div class="sec-title">저축 보험</div>
+  <div class="savings-card" id="savings-card">
+    <div class="savings-hdr">
+      <div class="savings-name" id="sav-name">저축 보험</div>
+      <div class="savings-monthly-tag mono" id="sav-monthly-tag">월 0원</div>
+    </div>
+    <div class="savings-stats">
+      <div class="sstat">
+        <div class="sl">현재 납입액</div>
+        <div class="sv" id="sav-current">0원</div>
+      </div>
+      <div class="sstat">
+        <div class="sl">목표 금액</div>
+        <div class="sv" id="sav-target">0원</div>
+      </div>
+      <div class="sstat">
+        <div class="sl">만기까지</div>
+        <div class="sv big" id="sav-dday">D-?</div>
+      </div>
+    </div>
+    <div class="savings-track">
+      <div class="savings-fill" id="sav-fill" style="width:0%"></div>
+    </div>
+    <div class="savings-foot">
+      <span id="sav-pct">0%</span>
+      <span id="sav-end-date">만기일 미설정</span>
+    </div>
+    <div class="savings-edit">
+      <input type="text" id="sav-name-in" placeholder="보험명">
+      <input type="number" id="sav-monthly-in" placeholder="월 납입액">
+      <input type="number" id="sav-current-in" placeholder="현재 납입 총액">
+      <input type="number" id="sav-target-in" placeholder="목표 금액">
+      <input type="date" id="sav-end-in" placeholder="만기일">
+      <button class="btn-save-s" onclick="saveSavings()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Card add modal -->
+<div class="overlay" id="card-modal">
+  <div class="modal">
+    <h3>카드 추가</h3>
+    <div class="mfield">
+      <label>카드 이름</label>
+      <input type="text" id="m-card-name" placeholder="예: 신한카드">
+    </div>
+    <div class="mfield">
+      <label>목표 한도 (원) — 비워두면 한도 없음</label>
+      <input type="number" id="m-card-goal" placeholder="예: 300000">
+    </div>
+    <div class="mfield">
+      <label>카드 색상</label>
+      <div class="colors" id="color-picker"></div>
+      <input type="hidden" id="m-card-color" value="#4a8c34">
+    </div>
+    <div class="mactions">
+      <button class="btn-cancel" onclick="closeCardModal()">취소</button>
+      <button class="btn-confirm" onclick="addCard()">추가</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let state = JSON.parse(localStorage.getItem('household_v2') || 'null') || {
+  months: {},
+  savings: { name:'저축 보험', monthly:0, current:0, target:0, endDate:'' }
+};
+const COLORS = ['#4a8c34','#e05c2a','#1a6fa8','#b83298','#a05c08','#5a3685','#b83228','#1a6a60'];
+let curDate = new Date();
+let curYear = curDate.getFullYear();
+let curMonth = curDate.getMonth() + 1;
+let selectedColor = COLORS[0];
+
+function monthKey() { return `${curYear}-${String(curMonth).padStart(2,'0')}`; }
+function getMonth() {
+  const k = monthKey();
+  if (!state.months[k]) state.months[k] = { income:0, cards:[], fixed:[] };
+  return state.months[k];
+}
+function save() { localStorage.setItem('household_v2', JSON.stringify(state)); }
+
+// ── Format ─────────────────────────────────────────────
+function fmt(n) {
+  if (n >= 10000) {
+    const man = Math.floor(n / 10000);
+    const rest = n % 10000;
+    if (rest === 0) return man + '만원';
+    return man + '만 ' + rest.toLocaleString() + '원';
+  }
+  return n.toLocaleString() + '원';
+}
+function fmtPlain(n) { return n.toLocaleString() + '원'; }
+
+// ── Date nav ───────────────────────────────────────────
+function changeMonth(d) {
+  curMonth += d;
+  if (curMonth > 12) { curMonth = 1; curYear++; }
+  if (curMonth < 1)  { curMonth = 12; curYear--; }
+  render();
+}
+function updateDateLabel() {
+  document.getElementById('month-label').textContent = `${curMonth}월`;
+  document.getElementById('year-lbl').textContent = `${curYear}년`;
+}
+
+// ── Income ─────────────────────────────────────────────
+function saveIncome() {
+  const v = parseInt(document.getElementById('income-input').value) || 0;
+  getMonth().income = v;
+  save(); render();
+}
+
+// ── Cards ──────────────────────────────────────────────
+function openCardModal() {
+  buildColorPicker();
+  document.getElementById('m-card-name').value = '';
+  document.getElementById('m-card-goal').value = '';
+  selectedColor = COLORS[0];
+  document.getElementById('m-card-color').value = selectedColor;
+  document.getElementById('card-modal').classList.add('open');
+}
+function closeCardModal() { document.getElementById('card-modal').classList.remove('open'); }
+
+function buildColorPicker() {
+  const el = document.getElementById('color-picker');
+  el.innerHTML = '';
+  COLORS.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'cdot' + (c === selectedColor ? ' sel' : '');
+    d.style.background = c;
+    d.onclick = () => {
+      selectedColor = c;
+      document.getElementById('m-card-color').value = c;
+      el.querySelectorAll('.cdot').forEach(x => x.classList.remove('sel'));
+      d.classList.add('sel');
+    };
+    el.appendChild(d);
+  });
+}
+
+function addCard() {
+  const name = document.getElementById('m-card-name').value.trim();
+  if (!name) return;
+  const goal = parseInt(document.getElementById('m-card-goal').value) || 0;
+  const color = selectedColor;
+  getMonth().cards.push({ id: Date.now(), name, goal, color, expenses: [] });
+  save(); closeCardModal(); render();
+}
+
+function addExpense(cardId) {
+  const m = getMonth();
+  const card = m.cards.find(c => c.id === cardId);
+  if (!card) return;
+  const desc = document.getElementById(`desc-${cardId}`).value.trim();
+  const amt  = parseInt(document.getElementById(`amt-${cardId}`).value) || 0;
+  if (!desc || !amt) return;
+  card.expenses.push({ id: Date.now(), desc, amt });
+  document.getElementById(`desc-${cardId}`).value = '';
+  document.getElementById(`amt-${cardId}`).value = '';
+  save(); render();
+}
+
+function deleteExpense(cardId, expId) {
+  const card = getMonth().cards.find(c => c.id === cardId);
+  if (!card) return;
+  card.expenses = card.expenses.filter(e => e.id !== expId);
+  save(); render();
+}
+
+function deleteCard(cardId) {
+  const m = getMonth();
+  m.cards = m.cards.filter(c => c.id !== cardId);
+  save(); render();
+}
+
+// ── Fixed ──────────────────────────────────────────────
+function addFixed() {
+  const name = document.getElementById('fixed-name').value.trim();
+  const amt  = parseInt(document.getElementById('fixed-amt').value) || 0;
+  const note = document.getElementById('fixed-note').value.trim();
+  if (!name || !amt) return;
+  getMonth().fixed.push({ id: Date.now(), name, amt, note });
+  document.getElementById('fixed-name').value = '';
+  document.getElementById('fixed-amt').value = '';
+  document.getElementById('fixed-note').value = '';
+  save(); render();
+}
+function deleteFixed(id) {
+  const m = getMonth();
+  m.fixed = m.fixed.filter(f => f.id !== id);
+  save(); render();
+}
+
+// ── Savings ────────────────────────────────────────────
+function saveSavings() {
+  const name    = document.getElementById('sav-name-in').value.trim() || '저축 보험';
+  const monthly = parseInt(document.getElementById('sav-monthly-in').value) || 0;
+  const current = parseInt(document.getElementById('sav-current-in').value) || 0;
+  const target  = parseInt(document.getElementById('sav-target-in').value) || 0;
+  const endDate = document.getElementById('sav-end-in').value;
+  state.savings = { name, monthly, current, target, endDate };
+  save(); render();
+}
+
+function calcDday(endDateStr) {
+  if (!endDateStr) return null;
+  const end = new Date(endDateStr);
+  const now = new Date();
+  now.setHours(0,0,0,0); end.setHours(0,0,0,0);
+  return Math.ceil((end - now) / 86400000);
+}
+
+// ── Render ─────────────────────────────────────────────
+function render() {
+  updateDateLabel();
+  const m = getMonth();
+
+  // income
+  document.getElementById('income-input').value = m.income || '';
+  document.getElementById('income-display').textContent = fmtPlain(m.income);
+
+  // cards
+  const cardTotal = m.cards.reduce((s, c) => s + c.expenses.reduce((a, e) => a + e.amt, 0), 0);
+  const fixedTotal = m.fixed.reduce((s, f) => s + f.amt, 0);
+  const totalExp = cardTotal + fixedTotal + (state.savings.monthly || 0);
+  const balance = m.income - totalExp;
+
+  document.getElementById('s-income').textContent = fmtPlain(m.income);
+  document.getElementById('s-expense').textContent = fmtPlain(totalExp);
+  document.getElementById('s-balance').textContent = fmtPlain(balance);
+  document.getElementById('s-balance').style.color = balance >= 0 ? 'var(--blue)' : 'var(--red)';
+
+  // render cards
+  const cardList = document.getElementById('card-list');
+  cardList.innerHTML = '';
+  m.cards.forEach(card => {
+    const used = card.expenses.reduce((s, e) => s + e.amt, 0);
+    const hasGoal = card.goal > 0;
+    const pct = hasGoal ? Math.min((used / card.goal) * 100, 100) : 0;
+    const gClass = pct < 70 ? 'g-ok' : pct < 100 ? 'g-warn' : 'g-over';
+
+    const el = document.createElement('div');
+    el.className = 'card-block';
+    el.innerHTML = `
+      <div class="card-top">
+        <div class="card-name-wrap">
+          <div class="card-dot" style="background:${card.color}"></div>
+          <div class="card-name-txt">${card.name}</div>
+          ${hasGoal ? `<div class="card-goal-tag">목표 ${fmt(card.goal)}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="card-right">
+            <span class="card-used" style="color:${card.color}">${fmtPlain(used)}</span>
+            ${hasGoal ? `<span class="card-denom"> / ${fmtPlain(card.goal)}</span>` : ''}
+          </div>
+          <button class="btn-del" onclick="deleteCard(${card.id})" title="카드 삭제">✕</button>
+        </div>
+      </div>
+      ${hasGoal ? `
+      <div class="gauge-track">
+        <div class="gauge-fill ${gClass}" style="width:${pct}%"></div>
+      </div>
+      <div class="gauge-meta">
+        <span>${pct >= 100 ? '⚠ 목표 초과!' : pct >= 70 ? '⚡ 거의 다 찼어요' : '잘 쓰고 있어요'}</span>
+        <span class="gauge-pct">${Math.round(pct)}%</span>
+      </div>` : ''}
+      ${card.expenses.length > 0 ? `
+      <div class="exp-log">
+        ${card.expenses.map(e => `
+          <div class="exp-row">
+            <span class="exp-name">${e.desc}</span>
+            <span class="exp-amt">-${fmtPlain(e.amt)}</span>
+            <button class="btn-del" onclick="deleteExpense(${card.id},${e.id})">✕</button>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      <div class="add-exp-row">
+        <input class="inp-desc" type="text" id="desc-${card.id}" placeholder="지출 내역">
+        <input class="inp-amt" type="number" id="amt-${card.id}" placeholder="금액">
+        <button class="btn-add-exp" onclick="addExpense(${card.id})">+ 추가</button>
+      </div>
+    `;
+    cardList.appendChild(el);
+
+    // enter key support
+    el.querySelector(`#desc-${card.id}`).addEventListener('keydown', e => { if(e.key==='Enter') el.querySelector(`#amt-${card.id}`).focus(); });
+    el.querySelector(`#amt-${card.id}`).addEventListener('keydown', e => { if(e.key==='Enter') addExpense(card.id); });
+  });
+
+  // fixed
+  const fixedList = document.getElementById('fixed-list');
+  fixedList.innerHTML = '';
+  if (m.fixed.length === 0) {
+    fixedList.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0;">고정 지출이 없습니다.</div>`;
+  }
+  m.fixed.forEach(f => {
+    const el = document.createElement('div');
+    el.className = 'fixed-item';
+    el.innerHTML = `
+      <div class="fixed-left">
+        <div class="fixed-icon">📌</div>
+        <div>
+          <div class="fixed-name">${f.name}</div>
+          ${f.note ? `<div class="fixed-sub">${f.note}</div>` : ''}
+        </div>
+      </div>
+      <div class="fixed-right">
+        <div class="fixed-amt">-${fmtPlain(f.amt)}</div>
+        <button class="btn-del" onclick="deleteFixed(${f.id})">✕</button>
+      </div>
+    `;
+    fixedList.appendChild(el);
+  });
+
+  // savings
+  const sav = state.savings;
+  document.getElementById('sav-name').textContent = sav.name || '저축 보험';
+  document.getElementById('sav-monthly-tag').textContent = `월 ${fmtPlain(sav.monthly)}`;
+  document.getElementById('sav-current').textContent = fmt(sav.current);
+  document.getElementById('sav-target').textContent = sav.target ? fmt(sav.target) : '미설정';
+
+  const dday = calcDday(sav.endDate);
+  const ddEl = document.getElementById('sav-dday');
+  if (dday === null) { ddEl.textContent = 'D-?'; }
+  else if (dday > 0) { ddEl.textContent = `D-${dday}`; ddEl.style.color = dday <= 30 ? '#b83228' : 'var(--purple)'; }
+  else if (dday === 0) { ddEl.textContent = 'D-Day!'; ddEl.style.color = '#b83228'; }
+  else { ddEl.textContent = '만기!'; ddEl.style.color = 'var(--green)'; }
+
+  const savPct = sav.target > 0 ? Math.min((sav.current / sav.target) * 100, 100) : 0;
+  document.getElementById('sav-fill').style.width = savPct + '%';
+  document.getElementById('sav-pct').textContent = Math.round(savPct) + '%';
+  document.getElementById('sav-end-date').textContent = sav.endDate ? `만기일: ${sav.endDate}` : '만기일 미설정';
+
+  // prefill savings edit
+  document.getElementById('sav-name-in').value = sav.name || '';
+  document.getElementById('sav-monthly-in').value = sav.monthly || '';
+  document.getElementById('sav-current-in').value = sav.current || '';
+  document.getElementById('sav-target-in').value = sav.target || '';
+  document.getElementById('sav-end-in').value = sav.endDate || '';
+}
+
+render();
+</script>
+</body>
+</html>
